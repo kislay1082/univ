@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String?  @unique
+  image          String?
+  balance        Int      @default(0)
+  rating         Int      @default(0)
+  ratingCount    Int      @default(0)
+  hashedPassword String?
+  verified       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  BookAds        BookAd[]
+  Sales          Order[]  @relation(name: "SellerRelation")
+  Purchases      Order[]  @relation(name: "BuyerRelation")
+}
+
+model BookAd {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  Seller      User     @relation(fields: [SellerId], references: [id])
+  SellerId    String   @db.ObjectId
+  title       String
+  description String?
+  image       String?
+  price       Int
+  verified    Boolean  @default(false)
+  sold        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Orders      Order[]
+}
+
+model Order {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  Seller    User     @relation(name: "SellerRelation", fields: [SellerId], references: [id])
+  SellerId  String   @db.ObjectId
+  Buyer     User     @relation(name: "BuyerRelation", fields: [BuyerId], references: [id])
+  BuyerId   String   @db.ObjectId
+  BookAd    BookAd   @relation(fields: [BookAdId], references: [id])
+  BookAdId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orderId   String?  @unique
+  paymentId String?
+  amount    Int
+  status    String?  @default("pending")
+}
